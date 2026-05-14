@@ -1,0 +1,9 @@
+export const KUROMOJI_DICT_PATH = "/dict/";
+export const CANVAS_SIZE = 128;
+export const MIN_FONT_SIZE = 24;
+export const MAX_FONT_SIZE = 96;
+export const DEFAULT_FONT_SIZE = 64;
+export const RENDER_DEBOUNCE_MS = 200;
+export const WORKER_TIMEOUT_MS = 30_000;
+export const FONT_READY_TIMEOUT_MS = 5_000;
+export const FALLBACK_ZIP_SLUG = "mojipon-emoji";
