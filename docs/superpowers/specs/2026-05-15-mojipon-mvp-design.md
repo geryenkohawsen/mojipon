@@ -264,7 +264,7 @@ Principle: never throw to the user. Catch at the component boundary; render inli
 | Pack-level filename collision | dedupe in `resolveZipEntries(files)` (separate step from `buildZip`) | Append `_2`, `_3` with warning. Resolved names are surfaced in the UI before the user can click Download. `buildZip` itself never silently renames. |
 | `buildZip([])` | guard in `pack.ts` | Throw `EMPTY_ZIP`. UI guard should already prevent this. |
 | Unsafe filename (`/`, `\`, `..`, control char) | `sanitizeForZip(name)` | Strip dangerous chars deterministically. `"../etc/passwd"` → `"etcpasswd"` plus warning `UNSAFE_PATH_CHARS_REMOVED`. Throws `EMPTY_FILENAME` only when nothing usable remains after sanitization. |
-| Symbol-only or empty input (e.g. `🔥`, `(笑)`, `!?!`) | `detectScriptClass` returns `symbol` or `empty` | Render allowed. Require user to type a custom filename before Download enables. Hint: "Emoji text can be rendered, but a filename is required." |
+| Symbol-only or empty input (e.g. `🔥`, `✅`, `!?!`) | `detectScriptClass` returns `symbol` or `empty` | Render allowed. Require user to type a custom filename before Download enables. Hint: "Emoji text can be rendered, but a filename is required." |
 | Non-Slack-recommended filename (`何ですか.png`) | classified `VariantSafety` in `buildVariants` | Tag `filename-safe`. Badge in UI: "Filename-safe (not a recommended Slack name — rename when uploading)." No hard block. |
 
 ### Kanji fallback rule
