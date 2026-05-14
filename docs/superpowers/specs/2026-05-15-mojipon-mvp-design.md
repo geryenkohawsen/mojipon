@@ -9,6 +9,19 @@ Mojipon is a Japanese-aware Slack emoji generator. The MVP turns a single text i
 
 The MVP is fully stateless, fully client-side, and deploys as a static site.
 
+### Product positioning
+
+Mojipon does **not** integrate with the Slack API.
+
+The user flow is:
+
+1. Create an emoji.
+2. Generate smart filename variants.
+3. Download a ZIP.
+4. Manually upload the chosen image file(s) to Slack.
+
+Mojipon may recommend Slack-friendly names, but it does not upload, modify, or manage Slack workspace emoji directly.
+
 ## 2. Scope
 
 ### In MVP
@@ -36,7 +49,7 @@ The MVP is fully stateless, fully client-side, and deploys as a static site.
 - Image upload as input.
 - Multi-emoji packs (batch input mode, persistent pack tray).
 - Animation (GIF/APNG).
-- Slack-direct upload via `emoji.admin.add`.
+- Direct Slack upload is **out of scope for the product**. Mojipon only generates downloadable files for manual upload. No Slack API integration is planned.
 - Creator marketplace.
 - Accounts, cloud history, persistence.
 
@@ -174,12 +187,12 @@ public/
   - romaji is derived inside buildVariants from effectiveReading (kanji/kana/mixed) or from the lowercased text (latin)
   - kanji  → if effectiveReading exists: romaji + kana + original; else: original only + READING_UNCERTAIN
   - kana   → romaji + original
-  - latin  → lowercased latin only (Slack API requires lower-case)
+  - latin  → lowercased latin only (Slack emoji names are conventionally lower-case)
   - mixed  → romaji (kana segments transliterated, latin segments lowercased) + original
   - symbol → no auto variants; user-provided filename forms the single variant
   - empty  → []
   - each variant tagged with VariantSafety:
-      "slack-api-safe" | "filename-safe" | "needs-review"
+      "recommended-slack-name" | "filename-safe" | "needs-review"
   |
   v
 [resolveZipEntries(selectedVariants)]
@@ -212,7 +225,7 @@ public/
 
 `<slug>` is chosen by:
 
-1. The first resolved variant tagged `slack-api-safe`, if any (its filename without `.png`).
+1. The first resolved variant tagged `recommended-slack-name`, if any (its filename without `.png`).
 2. Otherwise, the user's custom filename (symbol/empty case).
 3. Otherwise, the literal `mojipon-emoji`.
 
@@ -229,7 +242,7 @@ This avoids ambiguity for symbol-only or Japanese-filename-only exports.
 - No API routes, no Node runtime, static-export compatible.
 - Manual reading override always wins over the worker-suggested reading.
 - The `VariantList` UI shows the **final, post-resolution** filenames — `buildZip` never silently renames an entry that wasn't already shown to the user.
-- Japanese original/kana filenames are tagged `filename-safe`, not `slack-api-safe`. Users may need to rename on upload to Slack's strict API.
+- Japanese original/kana filenames are tagged `filename-safe`, not `recommended-slack-name`. Users may choose to rename them when manually uploading to Slack.
 
 ## 6. Error handling
 
@@ -252,7 +265,7 @@ Principle: never throw to the user. Catch at the component boundary; render inli
 | `buildZip([])` | guard in `pack.ts` | Throw `EMPTY_ZIP`. UI guard should already prevent this. |
 | Unsafe filename (`/`, `\`, `..`, control char) | `sanitizeForZip(name)` | Strip dangerous chars deterministically. `"../etc/passwd"` → `"etcpasswd"` plus warning `UNSAFE_PATH_CHARS_REMOVED`. Throws `EMPTY_FILENAME` only when nothing usable remains after sanitization. |
 | Symbol-only or empty input (e.g. `🔥`, `(笑)`, `!?!`) | `detectScriptClass` returns `symbol` or `empty` | Render allowed. Require user to type a custom filename before Download enables. Hint: "Emoji text can be rendered, but a filename is required." |
-| Slack-strict-unsafe filename (`何ですか.png`) | classified `VariantSafety` in `buildVariants` | Tag `filename-safe`. Badge in UI: "Filename-safe (not Slack API-safe — rename on upload)." No hard block. |
+| Non-Slack-recommended filename (`何ですか.png`) | classified `VariantSafety` in `buildVariants` | Tag `filename-safe`. Badge in UI: "Filename-safe (not a recommended Slack name — rename when uploading)." No hard block. |
 
 ### Kanji fallback rule
 
@@ -298,11 +311,11 @@ When kuromoji or the worker fails, do not block kanji input:
 
 - Kanji `"確認中"` + reading `"かくにんちゅう"` → 3 entries `[kakuninchuu, かくにんちゅう, 確認中]`.
 - Kana `"ありがとう"` → 2 entries.
-- Latin `"LGTM"` → 1 entry `lgtm.png` (lowercased for Slack API safety).
+- Latin `"LGTM"` → 1 entry `lgtm.png` (lowercased per Slack emoji-name convention).
 - Mixed `"LGTMです"` → 2 entries: `lgtmdesu.png` (kana segments transliterated via wanakana, latin segments preserved then lowercased) and `LGTMです.png` (original).
 - Kanji input with missing reading → only `[original]` + `READING_UNCERTAIN` warning.
 - Intra-emoji collision: hypothetical collision yields `_2` suffix.
-- `VariantSafety`: latin slug → `slack-api-safe`; JP filename → `filename-safe`.
+- `VariantSafety`: latin slug → `recommended-slack-name`; JP filename → `filename-safe`.
 
 **`lib/filename.ts` — `sanitizeForZip`**
 
@@ -382,5 +395,5 @@ Concretely: latin-only input must produce exactly one variant; kana-only input m
 1. **v2 — animation**: GIF/APNG output. Preset shake / bounce / rainbow / fade. New renderer module; preview becomes a frame loop.
 2. **v3 — image upload**: cropper for arbitrary image → 128×128 PNG. Reuses variant filename logic when user supplies a Japanese label.
 3. **v4 — multi-emoji packs**: batch input mode, persistent pack tray. Pack-level collision handler already designed for this.
-4. **v5 — Slack direct upload**: OAuth + `emoji.admin.add` integration.
+4. **v5 — team workflow helpers**: upload instructions, naming presets, workspace convention guides. No Slack API integration planned.
 5. **v6 — creator marketplace**: accounts, cloud storage, listings.
