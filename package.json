@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "postinstall": "node scripts/copy-kuromoji-dict.mjs",
+    "copy:dict": "node scripts/copy-kuromoji-dict.mjs"
   },
   "dependencies": {
     "jszip": "^3.10.1",
