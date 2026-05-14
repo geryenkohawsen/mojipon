@@ -86,7 +86,7 @@ Each is loaded with its CSS variable. The selected font's actual computed CSS fa
 ```
 src/
   app/
-    layout.tsx              # root layout, loads Noto Sans JP via next/font
+    layout.tsx              # root layout, loads curated JP fonts via next/font
     page.tsx                # landing / redirect or marketing shell
     studio/
       page.tsx              # server component shell, imports <EmojiStudio />
@@ -133,7 +133,8 @@ public/
 - `translit.worker.ts` is a thin shim that:
   - Lazy-loads kuromoji dict from `KUROMOJI_DICT_PATH` on first call.
   - Tokenizes input.
-  - Returns `{ original, suggestedKana, romaji, warnings }`.
+  - Returns `{ original, suggestedKana?, warnings }`.
+- The worker does **not** produce `romaji`. Romaji for kanji input is derived in `buildVariants` from `effectiveReading = manualReading || suggestedKana`. If no `effectiveReading` exists, no romaji variant is generated (matches the protected rule: kanji input without a reading never silently produces romaji).
 - `client.ts` wraps `worker.postMessage` in a Promise with timeout and error handling.
 - Worker instantiation: `new Worker(new URL("./translit.worker.ts", import.meta.url), { type: "module" })`.
 
@@ -159,7 +160,8 @@ public/
   - build suggested reading from token.reading
   - fallback to token.surface_form when reading is missing
   - push warning READING_UNCERTAIN if any fallback used
-  - return { original, suggestedKana, romaji, warnings }
+  - return { original, suggestedKana?, warnings }
+  - romaji is NOT computed in the worker; it is derived later from effectiveReading
   |
   v
 [EmojiStudio state]
@@ -168,8 +170,9 @@ public/
   - effectiveReading = manualReading || suggestedKana
   |
   v
-[buildVariants({ original, scriptClass, kana: effectiveReading, romaji })]
-  - kanji  → romaji + kana + original
+[buildVariants({ original, scriptClass, kana: effectiveReading })]
+  - romaji is derived inside buildVariants from effectiveReading (kanji/kana/mixed) or from the lowercased text (latin)
+  - kanji  → if effectiveReading exists: romaji + kana + original; else: original only + READING_UNCERTAIN
   - kana   → romaji + original
   - latin  → lowercased latin only (Slack API requires lower-case)
   - mixed  → romaji (kana segments transliterated, latin segments lowercased) + original
@@ -204,6 +207,16 @@ public/
   - downloadBlob(zipBlob, "<slug>.zip")
       via URL.createObjectURL + anchor click + URL.revokeObjectURL
 ```
+
+### ZIP filename slug rule
+
+`<slug>` is chosen by:
+
+1. The first resolved variant tagged `slack-api-safe`, if any (its filename without `.png`).
+2. Otherwise, the user's custom filename (symbol/empty case).
+3. Otherwise, the literal `mojipon-emoji`.
+
+This avoids ambiguity for symbol-only or Japanese-filename-only exports.
 
 ### Invariants
 
@@ -269,7 +282,7 @@ When kuromoji or the worker fails, do not block kanji input:
 - `"LGTM了解"` → `'kanji'` (any kanji → kanji class)
 - `"LGTMです"` → `'mixed'` (latin + kana, no kanji)
 - `"🔥"` → `'symbol'`
-- `"(笑)"` → `'symbol'` (punctuation + kanji-like? if `笑` is kanji → `'kanji'`. Test fixture pins behavior explicitly.)
+- `"(笑)"` → `'kanji'` (`笑` is a kanji → any kanji wins; no slang exception in MVP)
 - `"!?!"` → `'symbol'`
 - `""` → `'empty'`
 - Whitespace-only → `'empty'`
