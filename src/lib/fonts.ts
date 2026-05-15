@@ -13,9 +13,14 @@ export async function ensureFontsReady(
   fontFamily: string,
   fontSize: number,
   timeoutMs: number,
-  doc: DocumentLike = document as unknown as DocumentLike,
+  doc: DocumentLike | undefined = (typeof document !== "undefined"
+    ? (document as unknown as DocumentLike)
+    : undefined),
 ): Promise<FontReadyResult> {
   const warnings: string[] = [];
+  if (!doc?.fonts) {
+    return { warnings };
+  }
   const spec = `${fontSize}px ${fontFamily}`;
 
   const load = doc.fonts.load(spec);

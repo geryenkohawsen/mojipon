@@ -27,16 +27,20 @@ export function EmojiPreview({ text, bgColor, textColor, fontFamily }: Props) {
     let cancelled = false;
 
     (async () => {
-      await ensureFontsReady(getFontLoadName(fontFamily), DEFAULT_FONT_SIZE, FONT_READY_TIMEOUT_MS);
-      if (cancelled) return;
-      await drawEmojiToCanvas(canvas, {
-        text: text || " ",
-        bgColor,
-        textColor,
-        fontFamily,
-        maxFontSize: DEFAULT_FONT_SIZE,
-        minFontSize: MIN_FONT_SIZE,
-      });
+      try {
+        await ensureFontsReady(getFontLoadName(fontFamily), DEFAULT_FONT_SIZE, FONT_READY_TIMEOUT_MS);
+        if (cancelled) return;
+        await drawEmojiToCanvas(canvas, {
+          text: text || " ",
+          bgColor,
+          textColor,
+          fontFamily,
+          maxFontSize: DEFAULT_FONT_SIZE,
+          minFontSize: MIN_FONT_SIZE,
+        });
+      } catch {
+        // canvas/render failure leaves the preview blank; no user-facing throw
+      }
     })();
 
     return () => {
