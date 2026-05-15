@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { drawEmojiToCanvas } from "@/lib/render";
 import { ensureFontsReady } from "@/lib/fonts";
+import { getFontLoadName } from "./StylePicker";
 import {
   CANVAS_SIZE,
   DEFAULT_FONT_SIZE,
@@ -26,7 +27,7 @@ export function EmojiPreview({ text, bgColor, textColor, fontFamily }: Props) {
     let cancelled = false;
 
     (async () => {
-      await ensureFontsReady(fontFamily, DEFAULT_FONT_SIZE, FONT_READY_TIMEOUT_MS);
+      await ensureFontsReady(getFontLoadName(fontFamily), DEFAULT_FONT_SIZE, FONT_READY_TIMEOUT_MS);
       if (cancelled) return;
       await drawEmojiToCanvas(canvas, {
         text: text || " ",

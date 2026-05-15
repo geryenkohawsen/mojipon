@@ -7,10 +7,27 @@ export type StyleValue = {
 };
 
 export const FONT_OPTIONS = [
-  { label: "Noto Sans JP", value: 'var(--font-noto-sans-jp), "Noto Sans JP", sans-serif' },
-  { label: "Noto Serif JP", value: 'var(--font-noto-serif-jp), "Noto Serif JP", serif' },
-  { label: "M PLUS Rounded 1c", value: 'var(--font-m-plus-rounded), "M PLUS Rounded 1c", sans-serif' },
+  {
+    label: "Noto Sans JP",
+    value: 'var(--font-noto-sans-jp), "Noto Sans JP", sans-serif',
+    loadName: '"Noto Sans JP"',
+  },
+  {
+    label: "Noto Serif JP",
+    value: 'var(--font-noto-serif-jp), "Noto Serif JP", serif',
+    loadName: '"Noto Serif JP"',
+  },
+  {
+    label: "M PLUS Rounded 1c",
+    value: 'var(--font-m-plus-rounded), "M PLUS Rounded 1c", sans-serif',
+    loadName: '"M PLUS Rounded 1c"',
+  },
 ];
+
+export function getFontLoadName(fontFamily: string): string {
+  const opt = FONT_OPTIONS.find((o) => o.value === fontFamily);
+  return opt?.loadName ?? "sans-serif";
+}
 
 type Props = {
   value: StyleValue;
