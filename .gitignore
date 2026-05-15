@@ -42,3 +42,6 @@ next-env.d.ts
 
 # vendored kuromoji dict (copied via postinstall)
 /public/dict/
+
+# claude code local state
+/.claude/
