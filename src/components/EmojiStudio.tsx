@@ -33,6 +33,7 @@ export function EmojiStudio() {
 
   useEffect(() => {
     const cls = detectScriptClass(text);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- derive class from input + dispatch worker side-effect
     setScriptClass(cls);
 
     if (cls !== "kanji") {
@@ -76,6 +77,7 @@ export function EmojiStudio() {
   }, [text, scriptClass, effectiveReading, customFilename, workerWarnings]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset selection when variant list identity changes
     setSelected(new Set(variants.map((v) => v.filename)));
   }, [variants]);
 

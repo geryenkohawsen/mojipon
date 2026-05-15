@@ -13,6 +13,7 @@ export function TextInput({ value, onChange, debounceMs }: Props) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing external prop into local debounced state
     setLocal(value);
   }, [value]);
 

@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error -- kuromoji ships no types
 import kuromoji from "kuromoji";
 import * as wanakana from "wanakana";
